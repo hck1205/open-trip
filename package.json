@@ -16,5 +16,7 @@
   "bugs": {
     "url": "https://github.com/hck1205/open-trip/issues"
   },
-  "homepage": "https://github.com/hck1205/open-trip#readme"
+  "homepage": "https://github.com/hck1205/open-trip#readme",
+  "dependencies": {},
+  "devDependencies": {}
 }
