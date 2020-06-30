@@ -1,18 +1,5 @@
-import postSaga from "../sagas/post";
-
 export const initialState = {
-  mainPosts: [
-    {
-      id: 1,
-      User: {
-        id: 1,
-        nickname: "test",
-      },
-      content: "첫 번재 게시글",
-      img: "https://topclass.chosun.com/news_img/1812/1812_008.jpg",
-      Comments: [],
-    },
-  ],
+  mainPosts: [], // 화면에 보일 포스터들
   imagePaths: [], // 미리보기 이미지 경로
   addPostErrorReason: false, // 포스트 업로드 실패 사유
   isAddingPost: false, // 포스트 업로드 중
@@ -20,35 +7,16 @@ export const initialState = {
   isAddingPost: false,
   addCommentErrorReason: "",
   commentAdded: false,
-};
-
-const dummyPost = {
-  id: 2,
-  User: {
-    id: 1,
-    nickname: "ckhong",
-  },
-  content: "this is dummy",
-  Comments: [],
-};
-
-const dummyComment = {
-  id: 1,
-  User: {
-    id: 1,
-    nickname: "2",
-  },
-  createdAt: new Date(),
-  content: "dummy comment",
+  singlePost: null,
 };
 
 export const LOAD_MAIN_POSTS_REQUEST = "LOAD_MAIN_POSTS_REQUEST";
 export const LOAD_MAIN_POSTS_SUCCESS = "LOAD_MAIN_POSTS_SUCCESS";
 export const LOAD_MAIN_POSTS_FAILURE = "LOAD_MAIN_POSTS_FAILURE";
 
-export const LOAD_HASHTAGPOSTS_REQUEST = "LOAD_HASHTAGPOSTS_REQUEST";
-export const LOAD_HASHTAGPOSTS_SUCCESS = "LOAD_HASHTAGPOSTS_SUCCESS";
-export const LOAD_HASHTAGPOSTS_FAILURE = "LOAD_HASHTAGPOSTS_FAILURE";
+export const LOAD_HASHTAG_POSTS_REQUEST = "LOAD_HASHTAG_POSTS_REQUEST";
+export const LOAD_HASHTAG_POSTS_SUCCESS = "LOAD_HASHTAG_POSTS_SUCCESS";
+export const LOAD_HASHTAG_POSTS_FAILURE = "LOAD_HASHTAG_POSTS_FAILURE";
 
 export const LOAD_USER_POSTS_REQUEST = "LOAD_USER_POSTS_REQUEST";
 export const LOAD_USER_POSTS_SUCCESS = "LOAD_USER_POSTS_SUCCESS";
@@ -64,13 +32,13 @@ export const ADD_POST_REQUEST = "ADD_POST_REQUEST";
 export const ADD_POST_SUCCESS = "ADD_POST_SUCCESS";
 export const ADD_POST_FAILURE = "ADD_POST_FAILURE";
 
-export const LIKE_POSTS_REQUEST = "LIKE_POSTS_REQUEST";
-export const LIKE_POSTS_SUCCESS = "LIKE_POSTS_SUCCESS";
-export const LIKE_POSTS_FAILURE = "LIKE_POSTS_FAILURE";
+export const LIKE_POST_REQUEST = "LIKE_POST_REQUEST";
+export const LIKE_POST_SUCCESS = "LIKE_POST_SUCCESS";
+export const LIKE_POST_FAILURE = "LIKE_POST_FAILURE";
 
-export const UNLIKE_POSTS_REQUEST = "UNLIKE_POSTS_REQUEST";
-export const UNLIKE_POSTS_SUCCESS = "UNLIKE_POSTS_SUCCESS";
-export const UNLIKE_POSTS_FAILURE = "UNLIKE_POSTS_FAILURE";
+export const UNLIKE_POST_REQUEST = "UNLIKE_POST_REQUEST";
+export const UNLIKE_POST_SUCCESS = "UNLIKE_POST_SUCCESS";
+export const UNLIKE_POST_FAILURE = "UNLIKE_POST_FAILURE";
 
 export const LOAD_COMMENTS_REQUEST = "LOAD_COMMENTS_REQUEST";
 export const LOAD_COMMENTS_SUCCESS = "LOAD_COMMENTS_SUCCESS";
@@ -88,8 +56,38 @@ export const ADD_COMMENT_REQUEST = "ADD_COMMENT_REQUEST";
 export const ADD_COMMENT_SUCCESS = "ADD_COMMENT_SUCCESS";
 export const ADD_COMMENT_FAILURE = "ADD_COMMENT_FAILURE";
 
+export const LOAD_POST_REQUEST = "LOAD_POST_REQUEST";
+export const LOAD_POST_SUCCESS = "LOAD_POST_SUCCESS";
+export const LOAD_POST_FAILURE = "LOAD_POST_FAILURE";
+
 const reducer = (state = initialState, action) => {
   switch (action.type) {
+    case UPLOAD_IMAGES_REQUEST: {
+      return {
+        ...state,
+      };
+    }
+
+    case UPLOAD_IMAGES_SUCCESS: {
+      return {
+        ...state,
+        imagePaths: [...state.imagePaths, ...action.data],
+      };
+    }
+
+    case UPLOAD_IMAGES_FAILURE: {
+      return {
+        ...state,
+      };
+    }
+
+    case REMOVE_IMAGE: {
+      return {
+        ...state,
+        imagePaths: state.imagePaths.filter((v, i) => i !== action.index),
+      };
+    }
+
     case ADD_POST_REQUEST: {
       return {
         ...state,
@@ -103,8 +101,9 @@ const reducer = (state = initialState, action) => {
       return {
         ...state,
         isAddingPost: false,
-        mainPosts: [dummyPost, ...state.mainPosts],
+        mainPosts: [action.data, ...state.mainPosts],
         postAdded: true,
+        imagePaths: [],
       };
     }
 
@@ -114,6 +113,98 @@ const reducer = (state = initialState, action) => {
         isAddingPost: false,
         addPostErrorReason: action.error,
         postAdded: false,
+      };
+    }
+
+    case LIKE_POST_REQUEST: {
+      return {
+        ...state,
+      };
+    }
+
+    case LIKE_POST_SUCCESS: {
+      const postIndex = state.mainPosts.findIndex(
+        (v) => v.id === action.data.postId
+      );
+      const post = state.mainPosts[postIndex];
+      const Likers = [{ id: action.data.userId }, ...post.Likers];
+      const mainPosts = [...state.mainPosts];
+      mainPosts[postIndex] = { ...post, Likers };
+
+      return {
+        ...state,
+        mainPosts,
+      };
+    }
+
+    case LIKE_POST_FAILURE: {
+      return {
+        ...state,
+      };
+    }
+
+    case UNLIKE_POST_REQUEST: {
+      return {
+        ...state,
+      };
+    }
+
+    case UNLIKE_POST_SUCCESS: {
+      const postIndex = state.mainPosts.findIndex(
+        (v) => v.id === action.data.postId
+      );
+      const post = state.mainPosts[postIndex];
+      const Likers = post.Likers.filter((v) => v.id !== action.data.userId);
+      const mainPosts = [...state.mainPosts];
+      mainPosts[postIndex] = { ...post, Likers };
+
+      return {
+        ...state,
+        mainPosts,
+      };
+    }
+
+    case UNLIKE_POST_FAILURE: {
+      return {
+        ...state,
+      };
+    }
+
+    case RETWEET_SUCCESS: {
+      return {
+        ...state,
+        mainPosts: [action.data, ...state.mainPosts],
+      };
+    }
+
+    case RETWEET_FAILURE: {
+      return {
+        ...state,
+      };
+    }
+
+    case RETWEET_REQUEST: {
+      return {
+        ...state,
+      };
+    }
+
+    case REMOVE_POST_SUCCESS: {
+      return {
+        ...state,
+        mainPosts: state.mainPosts.filter((v) => v.id !== action.data),
+      };
+    }
+
+    case REMOVE_POST_FAILURE: {
+      return {
+        ...state,
+      };
+    }
+
+    case REMOVE_POST_REQUEST: {
+      return {
+        ...state,
       };
     }
 
@@ -131,7 +222,7 @@ const reducer = (state = initialState, action) => {
         (v) => v.id === action.data.postId
       );
       const post = state.mainPosts[postIndex];
-      const Comments = [...post.Comments, dummyComment];
+      const Comments = [...post.Comments, action.data.comment];
       const mainPosts = [...state.mainPosts];
       mainPosts[postIndex] = { ...post, Comments };
 
@@ -150,6 +241,57 @@ const reducer = (state = initialState, action) => {
         addCommentErrorReason: action.error,
       };
     }
+
+    case LOAD_COMMENTS_SUCCESS: {
+      const postIndex = state.mainPosts.findIndex(
+        (v) => v.id === action.data.postId
+      );
+      const post = state.mainPosts[postIndex];
+      const Comments = action.data.comments;
+      const mainPosts = [...state.mainPosts];
+      mainPosts[postIndex] = { ...post, Comments };
+
+      return {
+        ...state,
+        mainPosts,
+      };
+    }
+
+    case LOAD_MAIN_POSTS_REQUEST:
+    case LOAD_HASHTAG_POSTS_REQUEST:
+    case LOAD_USER_POSTS_REQUEST: {
+      return {
+        ...state,
+        mainPosts: !action.lastId ? [] : state.mainPosts, // action.lastId === 0 : 처음 불러오는 경우
+        hasMorePost: action.lastId ? state.hasMorePost : true,
+      };
+    }
+
+    case LOAD_MAIN_POSTS_SUCCESS:
+    case LOAD_HASHTAG_POSTS_SUCCESS:
+    case LOAD_USER_POSTS_SUCCESS: {
+      return {
+        ...state,
+        mainPosts: state.mainPosts.concat(action.data),
+        hasMorePost: action.data.length === 10,
+      };
+    }
+
+    case LOAD_MAIN_POSTS_FAILURE:
+    case LOAD_HASHTAG_POSTS_FAILURE:
+    case LOAD_USER_POSTS_FAILURE: {
+      return {
+        ...state,
+      };
+    }
+
+    case LOAD_POST_SUCCESS: {
+      return {
+        ...state,
+        singlePost: action.data,
+      };
+    }
+
     default: {
       return {
         ...state,

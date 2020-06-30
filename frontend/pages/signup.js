@@ -29,8 +29,8 @@ const Signup = () => {
   const [termError, setTermError] = useState(false);
 
   const [id, onChangeId] = useInput("");
-  const [nick, setNick] = useInput("");
-  const [password, setPassword] = useState("");
+  const [nickname, setNickname] = useInput("");
+  const [password, setPassword] = useInput("");
 
   const dispatch = useDispatch();
   const { isSigningUp, me } = useSelector((state) => state.user);
@@ -43,24 +43,26 @@ const Signup = () => {
   }, [me && me.id]);
 
   const onSubmit = useCallback(() => {
+    console.log("onSubmit");
     if (password !== passwordCheck) {
       return setPasswordError(true);
     }
     if (!term) {
       return setTermError(true);
     }
-    dispatch({
-      type: SIGN_UP_REQUEST,
-      data: { id, password, nick },
-    });
-  }, [password, passwordCheck, term]);
 
-  const onChangeNick = (e) => {
-    setNick(e.target.value);
+    return dispatch({
+      type: SIGN_UP_REQUEST,
+      data: { userId: id, password, nickname },
+    });
+  }, [id, nickname, password, passwordCheck, term]);
+
+  const onChangeNickname = (e) => {
+    setNickname(e);
   };
 
   const onChangePassword = (e) => {
-    setPassword(e.target.value);
+    setPassword(e);
   };
 
   const onChangePasswordCheck = (e) => {
@@ -73,6 +75,10 @@ const Signup = () => {
     setTerm(e.target.checked);
   };
 
+  if (me) {
+    return null;
+  }
+
   return (
     <Form onFinish={onSubmit} style={{ padding: 10 }}>
       <TextInput value={123} />
@@ -84,7 +90,12 @@ const Signup = () => {
       <div>
         <label htmlFor="user-nick">닉네임</label>
         <br />
-        <Input name="user-nick" value={nick} required onChange={onChangeNick} />
+        <Input
+          name="user-nick"
+          value={nickname}
+          required
+          onChange={onChangeNickname}
+        />
       </div>
       <div>
         <label htmlFor="user-password">비밀번호</label>

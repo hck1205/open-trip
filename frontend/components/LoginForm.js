@@ -7,7 +7,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { LOG_IN_REQUEST } from "../reducers/user";
 
 const LoginForm = () => {
-  const [id, onChangeId] = useInput("");
+  const [userId, onChangeId] = useInput("");
   const [password, onChangePassword] = useInput("");
   const { isLoggingIn } = useSelector((state) => state.user);
   const dispatch = useDispatch();
@@ -16,18 +16,18 @@ const LoginForm = () => {
     dispatch({
       type: LOG_IN_REQUEST,
       data: {
-        id,
+        userId,
         password,
       },
     });
-  }, [id, password]);
+  }, [userId, password]);
 
   return (
     <Form onFinish={onSubmitForm} style={{ padding: "10px" }}>
       <div>
         <label htmlFor={"user-id"}>아이디</label>
         <br />
-        <input name="user-id" value={id} onChange={onChangeId} required />
+        <input name="user-id" value={userId} onChange={onChangeId} required />
       </div>
       <div>
         <label htmlFor="user-password">비밀번호</label>
