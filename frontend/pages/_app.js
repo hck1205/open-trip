@@ -38,6 +38,10 @@ const NodeBird = ({ Component, store, pageProps }) => {
           { name: "og:title", content: "NodeBird" },
           { name: "og:description", content: "제로초의 NodeBird SNS" },
           { property: "og:type", content: "website" },
+          {
+            property: "og:image",
+            content: "http://localhost:3060/favicon.ico",
+          },
         ]}
         link={[
           {},
@@ -56,11 +60,6 @@ const NodeBird = ({ Component, store, pageProps }) => {
             href: "https://cdnjs.cloudflare.com/ajax/libs/antd/4.2.0/antd.css",
           },
         ]}
-        // script={[
-        //   {
-        //     src: "https://cdnjs.cloudflare.com/ajax/libs/antd/4.2.0/antd.js",
-        //   },
-        // ]}
       />
       <AppLayout>
         <Component {...pageProps} />

@@ -1,16 +1,9 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, memo, useRef } from "react";
 import PropTypes from "prop-types";
+import moment from "moment";
+moment.locale("ko");
 
-import {
-  Button,
-  Card,
-  Avatar,
-  Form,
-  Input,
-  List,
-  Comment,
-  Popover,
-} from "antd";
+import { Button, Card, Avatar, List, Comment, Popover } from "antd";
 import Link from "next/link";
 import { useSelector, useDispatch } from "react-redux";
 
@@ -27,7 +20,6 @@ import styled from "styled-components";
 
 import PostImages from "./Postimages";
 import {
-  ADD_COMMENT_REQUEST,
   LOAD_COMMENTS_REQUEST,
   UNLIKE_POST_REQUEST,
   LIKE_POST_REQUEST,
@@ -36,21 +28,24 @@ import {
 } from "../reducers/post";
 import PostCardContent from "./PostCardContent";
 import { FOLLOW_USER_REQUEST, UNFOLLOW_USER_REQUEST } from "../reducers/user";
+import CommentForm from "./CommentForm";
+import FollowButton from "./FollowButton";
 
 const CardWrapper = styled.div`
   margin-bottom: 20px;
 `;
 
-const PostCard = ({ post }) => {
+const PostCard = memo(({ post }) => {
   const [commentFormOpened, setCommentFormOpend] = useState(false);
-  const [commentText, setCommentText] = useState("");
-  const [] = useState(false);
-  const { me } = useSelector((state) => state.user);
-  const { commentAdded, isAddingComment } = useSelector((state) => state.post);
 
-  const liked = me && post.Likers && post.Likers.find((v) => v.id === me.id);
+  const id = useSelector((state) => state.user.me && state.user.id);
+
+  const liked = id && post.Likers && post.Likers.find((v) => v.id === id);
 
   const dispatch = useDispatch();
+  const postMemory = useRef(id);
+
+  useEffect(() => {}, [id]);
 
   const onToggleComment = useCallback(() => {
     setCommentFormOpend((prev) => !prev);
@@ -62,30 +57,8 @@ const PostCard = ({ post }) => {
     }
   }, []);
 
-  const onSubmitComment = useCallback(() => {
-    if (!me) {
-      return alert("로그인이 필요합니다.");
-    } else {
-      dispatch({
-        type: ADD_COMMENT_REQUEST,
-        data: {
-          postId: post.id,
-          content: commentText,
-        },
-      });
-    }
-  }, [me && me.id, commentText]);
-
-  useEffect(() => {
-    setCommentText("");
-  }, [commentAdded === true]);
-
-  const onChangeCommentText = useCallback((e) => {
-    setCommentText(e.target.value);
-  }, []);
-
   const onToggleLike = useCallback(() => {
-    if (!me) {
+    if (!id) {
       return alert("로그인이 필요합니다");
     }
 
@@ -102,7 +75,7 @@ const PostCard = ({ post }) => {
         data: post.id,
       });
     }
-  }, [me && me.id, post && post.id, liked]);
+  }, [id, post && post.id, liked]);
 
   const onRetweet = useCallback(() => {
     if (!me) {
@@ -112,7 +85,7 @@ const PostCard = ({ post }) => {
       type: RETWEET_REQUEST,
       data: post.id,
     });
-  }, [me && me.id, post && post.id]);
+  }, [id, post && post.id]);
 
   const onFollow = useCallback(
     (userId) => () => {
@@ -181,14 +154,11 @@ const PostCard = ({ post }) => {
           post.RetweetId ? `${post.User.nickname}님이 리트윗 하셨습니다.` : null
         }
         extra={
-          // 내가 로그인 안했거나 내 게시글을 보고있으면 Follow/UnFollow 필요없고 = null
-          // 내 팔로우중에 유저 아이디가 있으면 버튼을 출력할건데 조건은 있냐 없냐에 따른 팔로우 언팔로우
-          !me || post.User.id === me.id ? null : me.Followings &&
-            me.Followings.find((v) => v.id === post.User.id) ? (
-            <Button onClick={onUnfollow(post.User.id)}>언팔로우</Button>
-          ) : (
-            <Button onClick={onFollow(post.User.id)}>팔로우</Button>
-          )
+          <FollowButton
+            post={post}
+            onUnfollow={onUnfollow}
+            onFollow={onFollow}
+          />
         }
       >
         {post.RetweetId && post.Retweet ? (
@@ -217,6 +187,7 @@ const PostCard = ({ post }) => {
               title={post.Retweet.User.nickname}
               description={<PostCardContent postData={post.Retweet.content} />}
             />
+            {moment(post.createdAt).format("YYYY.MM.DD")}
           </Card>
         ) : (
           // 리트윗 하지 않은경우
@@ -238,22 +209,7 @@ const PostCard = ({ post }) => {
       </Card>
       {commentFormOpened && (
         <>
-          <Form onFinish={onSubmitComment}>
-            <Form.Item>
-              <Input.TextArea
-                rows={4}
-                value={commentText}
-                onChange={onChangeCommentText}
-              />
-            </Form.Item>
-            <Button
-              type="primary"
-              htmlType={"submit"}
-              loading={isAddingComment}
-            >
-              삐약
-            </Button>
-          </Form>
+          <CommentForm post={post} />
           <List
             header={`${post.Comments ? post.Comments.length : 0} 댓글`}
             itemLayout="horizontal"
@@ -287,7 +243,7 @@ const PostCard = ({ post }) => {
       )}
     </CardWrapper>
   );
-};
+});
 
 PostCard.protoTypes = {
   post: PropTypes.shape({
